@@ -3,6 +3,7 @@ import jwt from "@fastify/jwt";
 import { openDb } from "./db.js";
 import { registerErrorHandler, HttpError } from "./errors.js";
 import { authRoutes } from "./routes/auth.js";
+import { projectRoutes } from "./routes/projects.js";
 
 export interface AppOptions {
   logger?: boolean;
@@ -29,6 +30,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
 
   app.get("/health", async () => ({ status: "ok", uptime: process.uptime() }));
   await app.register(authRoutes);
+  await app.register(projectRoutes);
 
   return app;
 }
