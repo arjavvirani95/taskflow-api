@@ -4,6 +4,7 @@ import { openDb } from "./db.js";
 import { registerErrorHandler, HttpError } from "./errors.js";
 import { authRoutes } from "./routes/auth.js";
 import { projectRoutes } from "./routes/projects.js";
+import { taskRoutes } from "./routes/tasks.js";
 
 export interface AppOptions {
   logger?: boolean;
@@ -31,6 +32,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   app.get("/health", async () => ({ status: "ok", uptime: process.uptime() }));
   await app.register(authRoutes);
   await app.register(projectRoutes);
+  await app.register(taskRoutes);
 
   return app;
 }
