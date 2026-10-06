@@ -1,5 +1,8 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import jwt from "@fastify/jwt";
+import swagger from "@fastify/swagger";
+import swaggerUi from "@fastify/swagger-ui";
+import { fileURLToPath } from "node:url";
 import { openDb } from "./db.js";
 import { registerErrorHandler, HttpError } from "./errors.js";
 import { authRoutes } from "./routes/auth.js";
@@ -26,6 +29,12 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       throw new HttpError(401, "Unauthorized");
     }
   });
+
+  await app.register(swagger, {
+    mode: "static",
+    specification: { path: fileURLToPath(new URL("../openapi.yaml", import.meta.url)), baseDir: "" },
+  });
+  await app.register(swaggerUi, { routePrefix: "/docs" });
 
   registerErrorHandler(app);
 

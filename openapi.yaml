@@ -1,0 +1,80 @@
+openapi: 3.0.3
+info:
+  title: Taskflow API
+  version: 0.1.0
+  description: Task management REST API. Authenticate with a Bearer token from /auth/login.
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+  schemas:
+    Credentials:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+    Project:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        created_at: { type: string }
+    Task:
+      type: object
+      properties:
+        id: { type: integer }
+        project_id: { type: integer }
+        title: { type: string }
+        status: { type: string, enum: [todo, in_progress, done] }
+        priority: { type: integer, minimum: 1, maximum: 3 }
+        due_date: { type: string, format: date, nullable: true }
+security: [{ bearer: [] }]
+paths:
+  /health:
+    get: { summary: Health check, security: [], responses: { "200": { description: OK } } }
+  /auth/register:
+    post:
+      summary: Create an account
+      security: []
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Credentials" } } } }
+      responses: { "201": { description: Created }, "409": { description: Email taken } }
+  /auth/login:
+    post:
+      summary: Get a JWT
+      security: []
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Credentials" } } } }
+      responses: { "200": { description: Token issued }, "401": { description: Bad credentials } }
+  /projects:
+    get: { summary: List your projects, responses: { "200": { description: OK } } }
+    post:
+      summary: Create a project
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Project" } } } }
+      responses: { "201": { description: Created } }
+  /projects/{id}:
+    parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+    get: { summary: Get a project, responses: { "200": { description: OK }, "404": { description: Not found } } }
+    patch: { summary: Update a project, responses: { "200": { description: OK } } }
+    delete: { summary: Delete a project and its tasks, responses: { "204": { description: Deleted } } }
+  /projects/{projectId}/tasks:
+    parameters: [{ name: projectId, in: path, required: true, schema: { type: integer } }]
+    get:
+      summary: List tasks
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [todo, in_progress, done] } }
+        - { name: priority, in: query, schema: { type: integer } }
+        - { name: q, in: query, description: Title search, schema: { type: string } }
+        - { name: sort, in: query, schema: { type: string, enum: [created_at, due_date, priority] } }
+        - { name: limit, in: query, schema: { type: integer, default: 20 } }
+        - { name: offset, in: query, schema: { type: integer, default: 0 } }
+      responses: { "200": { description: Paginated tasks } }
+    post:
+      summary: Create a task
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/Task" } } } }
+      responses: { "201": { description: Created } }
+  /projects/{projectId}/tasks/{taskId}:
+    parameters:
+      - { name: projectId, in: path, required: true, schema: { type: integer } }
+      - { name: taskId, in: path, required: true, schema: { type: integer } }
+    patch: { summary: Update a task, responses: { "200": { description: OK } } }
+    delete: { summary: Delete a task, responses: { "204": { description: Deleted } } }
