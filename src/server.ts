@@ -1,7 +1,7 @@
 import { buildApp } from "./app.js";
 
 const port = Number(process.env.PORT ?? 3000);
-const app = await buildApp({ logger: true });
+const app = await buildApp({ logger: true, dbPath: process.env.DB_PATH });
 
 try {
   await app.listen({ port, host: "0.0.0.0" });
